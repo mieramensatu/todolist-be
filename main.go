@@ -43,5 +43,5 @@ func main() {
 	routes.SetupTaskRoutes(app)
 
 	// Menjalankan server Fiber
-	app.Listen(":3000")
+	app.Listen(":6969")
 }

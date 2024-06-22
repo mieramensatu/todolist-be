@@ -1,11 +1,12 @@
 package controller
 
 import (
+	"net/http"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/mieramensatu/todolist-be/model"
 	"github.com/mieramensatu/todolist-be/repository"
 	"gorm.io/gorm"
-	"net/http"
-	"strconv"
 )
 
 func GetAllUsers(c *fiber.Ctx) error {
@@ -38,17 +39,29 @@ func DeleteUserById(c *fiber.Ctx) error {
 
 func PromoteUserToAdmin(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
-	idParam := c.Params("id_user")
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid user ID",
+	user := c.Locals("user").(*model.Users)
+
+	// Hanya admin yang bisa mengakses endpoint ini
+	if user.IdRole != 1 {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{
+			"error": "Forbidden",
 		})
 	}
 
-	if err := repository.PromoteUserToAdmin(db, uint(id)); err != nil {
+	// Dapatkan id user yang ingin di-promote dari body request
+	var requestBody struct {
+		IDUser uint `json:"id_user"`
+	}
+	if err := c.BodyParser(&requestBody); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Bad Request",
+		})
+	}
+
+	// Panggil repository untuk melakukan promosi user ke admin
+	if err := repository.PromoteUserToAdmin(db, requestBody.IDUser); err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to promote user",
+			"error": "Internal Server Error",
 		})
 	}
 

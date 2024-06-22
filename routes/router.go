@@ -30,7 +30,7 @@ func SetupTaskRoutes(app *fiber.App) {
 	admin.Post("/promoteuser", adminOnly, controller.PromoteUserToAdmin)
 
 	// Non-admin specific routes
-	app.Get("/tasks", middleware.Auth(), controller.GetUserTasks)
+	app.Get("/task", middleware.Auth(), controller.GetUserTasks)
 	app.Get("/task/get/:id_task", middleware.Auth(), controller.GetTaskById)
 	app.Post("/task/insert", middleware.Auth(), controller.InsertTask)
 	app.Put("/task/update", middleware.Auth(), controller.UpdateTask)
