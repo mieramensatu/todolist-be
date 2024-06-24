@@ -41,6 +41,12 @@ func Auth() fiber.Handler {
 
 		c.Locals("user", user)
 
+		if user.IdRole == 1 { // Jika peran (role) adalah admin
+			return c.Status(http.StatusForbidden).JSON(fiber.Map{
+				"error": "Access denied",
+			})
+		}
+
 		return c.Next()
 	}
 }

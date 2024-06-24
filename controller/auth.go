@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
@@ -57,7 +56,6 @@ func LoginUser(c *fiber.Ctx) error {
 			"error": "Failed to generate token",
 		})
 	}
-	fmt.Println(request)
 	return c.JSON(fiber.Map{
 		
 		"token": token,
