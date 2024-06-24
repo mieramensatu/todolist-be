@@ -41,13 +41,6 @@ func Auth() fiber.Handler {
 
 		c.Locals("user", user)
 
-		// Check if user is admin (id_role == 1) to authorize access to certain endpoints
-		if user.IdRole != 1 {
-			return c.Status(http.StatusForbidden).JSON(fiber.Map{
-				"error": "Forbidden: Admin access required",
-			})
-		}
-
 		return c.Next()
 	}
 }

@@ -1,47 +1,41 @@
 package main
 
 import (
-	"log"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/joho/godotenv"
 	"github.com/mieramensatu/todolist-be/config"
 	"github.com/mieramensatu/todolist-be/routes"
 )
 
 func main() {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
 	// Membuat aplikasi Fiber
 	app := fiber.New()
 
 	// Koneksi ke database
 	db := config.CreateDBConnection()
 
+	// Middleware untuk logging
 	app.Use(logger.New(logger.Config{
 		Format: "${status} - ${method} ${path}\n",
 	}))
 
+	// Middleware CORS
 	app.Use(cors.New(cors.Config{
-		AllowHeaders: "*",
-		AllowOrigins: "*",
-		AllowMethods: "GET, POST, PUT, DELETE",
+    	AllowOrigins: "*",
+    	AllowMethods: "GET, POST, PUT, DELETE",
+    	AllowHeaders: "*",
 	}))
 
-	// Menyimpan koneksi database dalam context Fiber
+	// Middleware untuk menyimpan koneksi database dalam context Fiber
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals("db", db)
 		return c.Next()
 	})
 
-	// Menetapkan rute untuk handler buku
+	// Setup routes
 	routes.SetupTaskRoutes(app)
 
-	// Menjalankan server Fiber
+	// Menjalankan server Fiber pada port 6969
 	app.Listen(":6969")
 }

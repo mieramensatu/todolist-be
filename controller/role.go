@@ -22,13 +22,21 @@ func GetAllRole(c *fiber.Ctx) error {
 }
 
 func GetRoleById(c *fiber.Ctx) error {
-	db := c.Locals("db").(*gorm.DB)
+	var data struct {
+		IdRole string `json:"id_role"`
+	}
 
-	id := c.Params("id_role")
-	role, err := repository.GetRoleById(db, id)
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	role, err := repository.GetRoleById(db, data.IdRole)
 	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to retrieve role",
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
 		})
 	}
 

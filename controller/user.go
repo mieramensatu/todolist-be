@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/mieramensatu/todolist-be/model"
 	"github.com/mieramensatu/todolist-be/repository"
 	"gorm.io/gorm"
 )
@@ -23,12 +22,20 @@ func GetAllUsers(c *fiber.Ctx) error {
 }
 
 func DeleteUserById(c *fiber.Ctx) error {
-	db := c.Locals("db").(*gorm.DB)
-	id := c.Params("id_user")
+	var data struct {
+		IdUser string `json:"id_user"`
+	}
 
-	if err := repository.DeleteUserById(db, id); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to delete user",
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	if err := repository.DeleteUserById(db, data.IdUser); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
 		})
 	}
 
@@ -38,30 +45,33 @@ func DeleteUserById(c *fiber.Ctx) error {
 }
 
 func PromoteUserToAdmin(c *fiber.Ctx) error {
+	var data struct {
+		IdUser uint `json:"id_user"`
+	}
+
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
 	db := c.Locals("db").(*gorm.DB)
-	user := c.Locals("user").(*model.Users)
-
-	// Hanya admin yang bisa mengakses endpoint ini
-	if user.IdRole != 1 {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{
-			"error": "Forbidden",
+	user, err := repository.GetUserById(db, data.IdUser)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
 		})
 	}
 
-	// Dapatkan id user yang ingin di-promote dari body request
-	var requestBody struct {
-		IDUser uint `json:"id_user"`
-	}
-	if err := c.BodyParser(&requestBody); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": "Bad Request",
+	if user.IdRole == 1 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "User is already an admin",
 		})
 	}
 
-	// Panggil repository untuk melakukan promosi user ke admin
-	if err := repository.PromoteUserToAdmin(db, requestBody.IDUser); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Internal Server Error",
+	if err := repository.PromoteUserToAdmin(db, data.IdUser); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
 		})
 	}
 

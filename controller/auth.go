@@ -57,6 +57,7 @@ func LoginUser(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
+		
 		"token": token,
 	})
 }

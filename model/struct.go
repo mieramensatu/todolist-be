@@ -1,24 +1,28 @@
 package model
 
-import "github.com/dgrijalva/jwt-go"
+import (
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
+)
 
 type Task struct {
-	IdTask    int    `gorm:"primaryKey;column:id_task" json:"id_task"`
-	IdUser    uint   `gorm:"column:id_user" json:"id_user"` // Changed to uint
-	Judul     string `gorm:"column:judul" json:"judul"`
-	Deskripsi string `gorm:"column:deskripsi" json:"deskripsi"`
-	DueDate   string `gorm:"column:due_date" json:"due_date"`
-	Completed string `gorm:"column:completed" json:"completed"`
+	IdTask    uint      `json:"id_task" gorm:"primaryKey"`
+	Judul     string    `json:"judul"`
+	Deskripsi string    `json:"deskripsi"`
+	DueDate   time.Time `json:"due_date"`
+	Completed bool      `json:"completed"` // Ensure this field is a boolean
+	IdUser    uint      `json:"id_user"`
 }
 
 type GetJoinTask struct {
-	IdTask    int    `gorm:"primaryKey;column:id_task" json:"id_task"`
-	IdUser    uint   `gorm:"column:id_user" json:"id_user"` // Changed to uint
-	Nama      string `gorm:"column:nama" json:"nama"`
-	Judul     string `gorm:"column:judul" json:"judul"`
-	Deskripsi string `gorm:"column:deskripsi" json:"deskripsi"`
-	DueDate   string `gorm:"column:due_date" json:"due_date"`
-	Completed string `gorm:"column:completed" json:"completed"`
+	IdTask    uint      `json:"id_task"`
+	Judul     string    `json:"judul"`
+	Deskripsi string    `json:"deskripsi"`
+	DueDate   time.Time `json:"due_date"`
+	Completed bool      `json:"completed"` // Ensure this field is a boolean
+	IdUser    uint      `json:"id_user"`
+	Nama      string    `json:"nama"`
 }
 
 type Users struct {
