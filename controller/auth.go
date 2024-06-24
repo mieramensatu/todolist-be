@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/mieramensatu/todolist-be/model"
 	"github.com/mieramensatu/todolist-be/repository"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 func RegisterUser(c *fiber.Ctx) error {
@@ -55,7 +57,7 @@ func LoginUser(c *fiber.Ctx) error {
 			"error": "Failed to generate token",
 		})
 	}
-
+	fmt.Println(request)
 	return c.JSON(fiber.Map{
 		
 		"token": token,
