@@ -1,8 +1,6 @@
 package model
 
 import (
-	"time"
-
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -10,7 +8,7 @@ type Task struct {
 	IdTask    uint      `json:"id_task" gorm:"primaryKey"`
 	Judul     string    `json:"judul"`
 	Deskripsi string    `json:"deskripsi"`
-	DueDate   time.Time `json:"due_date"`
+	DueDate   string	`json:"due_date"`
 	Completed bool      `json:"completed"` // Ensure this field is a boolean
 	IdUser    uint      `json:"id_user"`
 }
@@ -19,8 +17,8 @@ type GetJoinTask struct {
 	IdTask    uint      `json:"id_task"`
 	Judul     string    `json:"judul"`
 	Deskripsi string    `json:"deskripsi"`
-	DueDate   time.Time `json:"due_date"`
-	Completed bool      `json:"completed"` // Ensure this field is a boolean
+	DueDate   string `json:"due_date"`
+	Completed bool      `json:"completed"`
 	IdUser    uint      `json:"id_user"`
 	Nama      string    `json:"nama"`
 }

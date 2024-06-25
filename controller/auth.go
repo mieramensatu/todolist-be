@@ -63,6 +63,8 @@ func LoginUser(c *fiber.Ctx) error {
 }
 
 func GetMe(c *fiber.Ctx) error {
-	user := c.Locals("user").(*model.Users)
-	return c.JSON(user)
+    user := c.Locals("user").(*model.Users)
+    return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        "user": user,
+    })
 }

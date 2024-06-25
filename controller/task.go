@@ -1,11 +1,14 @@
 package controller
 
 import (
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/mieramensatu/todolist-be/model"
 	"github.com/mieramensatu/todolist-be/repository"
 	"gorm.io/gorm"
-	"net/http"
 )
 
 func GetAllTask(c *fiber.Ctx) error {
@@ -24,104 +27,116 @@ func GetAllTask(c *fiber.Ctx) error {
 
 
 func GetTaskById(c *fiber.Ctx) error {
-	var data struct {
-		IdTask string `json:"id_task"`
-	}
+    idParam := c.Params("id_task")
+    idTask, err := strconv.ParseUint(idParam, 10, 64)
+    if err != nil {
+        return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid task ID",
+        })
+    }
 
-	if err := c.BodyParser(&data); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
+    db := c.Locals("db").(*gorm.DB)
+    task, err := repository.GetTaskById(db, strconv.FormatUint(idTask, 10))
+    if err != nil {
+        return c.Status(http.StatusNotFound).JSON(fiber.Map{
+            "error": "Task not found",
+        })
+    }
 
-	db := c.Locals("db").(*gorm.DB)
-	task, err := repository.GetTaskById(db, data.IdTask)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(task)
+    return c.JSON(task)
 }
 
+// GetUserTasks gets tasks by user_id
 func GetUserTasks(c *fiber.Ctx) error {
-	user := c.Locals("user").(*model.Users)
-	db := c.Locals("db").(*gorm.DB)
+    user := c.Locals("user").(*model.Users)
+    db := c.Locals("db").(*gorm.DB)
 
-	tasks, err := repository.GetTasksByUserId(db, user.IdUser)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-	return c.JSON(tasks)
+    tasks, err := repository.GetTasksByUserId(db, user.IdUser)
+    if err != nil {
+        return c.Status(http.StatusNotFound).JSON(fiber.Map{
+            "error": "Tasks not found",
+        })
+    }
+
+    return c.JSON(tasks)
 }
 
 func InsertTask(c *fiber.Ctx) error {
-	user := c.Locals("user").(*model.Users)
 	db := c.Locals("db").(*gorm.DB)
+	user := c.Locals("user").(*model.Users)
 
-	task := new(model.Task)
-	if err := c.BodyParser(task); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+	var task model.Task
+	if err := c.BodyParser(&task); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Failed to parse request body",
+		})
+	}
+
+	// Validate due_date format
+	if _, err := time.Parse("2006-01-02", task.DueDate); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid due_date format. Use YYYY-MM-DD",
 		})
 	}
 
 	task.IdUser = user.IdUser
-
-	if err := repository.InsertTask(db, task); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	if err := repository.InsertTask(db, &task); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to insert task",
 		})
 	}
-	return c.JSON(task)
+
+	return c.Status(http.StatusCreated).JSON(task)
 }
 
+// UpdateTask updates task by id_task
 func UpdateTask(c *fiber.Ctx) error {
-	var data struct {
-		IdTask string       `json:"id_task"`
-		Task   model.Task `json:"task"`
-	}
-
-	if err := c.BodyParser(&data); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
-
 	db := c.Locals("db").(*gorm.DB)
-	if err := repository.UpdateTask(db, data.IdTask, data.Task); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	idTask := c.Params("id_task")
+
+	var updatedTask model.Task
+	if err := c.BodyParser(&updatedTask); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Failed to parse request body",
 		})
 	}
 
-	return c.JSON(fiber.Map{
+	// Validate due_date format
+	if _, err := time.Parse("2006-01-02", updatedTask.DueDate); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid due_date format. Use YYYY-MM-DD",
+		})
+	}
+
+	if err := repository.UpdateTask(db, idTask, updatedTask); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update task",
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "Task updated successfully",
 	})
 }
 
+// DeleteTask deletes task by id_task
 func DeleteTask(c *fiber.Ctx) error {
-	var data struct {
-		IdTask string `json:"id_task"`
-	}
+    idParam := c.Params("id_task")
+    idTask, err := strconv.ParseUint(idParam, 10, 64)
+    if err != nil {
+        return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid task ID",
+        })
+    }
 
-	if err := c.BodyParser(&data); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
+    db := c.Locals("db").(*gorm.DB)
+	if err := repository.DeleteTask(db, strconv.FormatUint(idTask, 10)); err != nil {
+        return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to delete task",
+        })
+    }
 
-	db := c.Locals("db").(*gorm.DB)
-	if err := repository.DeleteTask(db, data.IdTask); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(fiber.Map{
-		"message": "Task deleted successfully",
-	})
+    return c.JSON(fiber.Map{
+        "message": "Task successfully deleted",
+    })
 }

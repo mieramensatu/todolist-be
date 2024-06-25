@@ -40,13 +40,6 @@ func Auth() fiber.Handler {
 		}
 
 		c.Locals("user", user)
-
-		if user.IdRole == 1 { // Jika peran (role) adalah admin
-			return c.Status(http.StatusForbidden).JSON(fiber.Map{
-				"error": "Access denied",
-			})
-		}
-
 		return c.Next()
 	}
 }
@@ -55,9 +48,9 @@ func AdminOnly() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*model.Users)
 
-		if user.IdRole != 1 { // Ubah sesuai dengan role admin di database Anda
+		if user.IdRole != 1 {
 			return c.Status(http.StatusForbidden).JSON(fiber.Map{
-				"error": "Akses ditolak",
+				"error": "Access denied: Admin only",
 			})
 		}
 

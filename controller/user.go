@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mieramensatu/todolist-be/repository"
@@ -9,73 +10,90 @@ import (
 )
 
 func GetAllUsers(c *fiber.Ctx) error {
-	db := c.Locals("db").(*gorm.DB)
+    db := c.Locals("db").(*gorm.DB)
+    users, err := repository.GetAllUsers(db)
+    if err != nil {
+        return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to retrieve users",
+        })
+    }
 
-	users, err := repository.GetAllUsers(db)
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to retrieve users",
-		})
-	}
-
-	return c.JSON(users)
+    return c.JSON(users)
 }
 
 func DeleteUserById(c *fiber.Ctx) error {
-	var data struct {
-		IdUser string `json:"id_user"`
-	}
+    idParam := c.Params("id_user")
+    idUser, err := strconv.ParseUint(idParam, 10, 64)
+    if err != nil {
+        return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid user ID",
+        })
+    }
 
-	if err := c.BodyParser(&data); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
+    db := c.Locals("db").(*gorm.DB)
+	if err := repository.DeleteUserById(db, strconv.FormatUint(idUser, 10)); err != nil {
+        return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+            "error": "Failed to delete user",
+        })
+    }
 
-	db := c.Locals("db").(*gorm.DB)
-	if err := repository.DeleteUserById(db, data.IdUser); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(fiber.Map{
-		"message": "User deleted successfully",
-	})
+    return c.JSON(fiber.Map{
+        "message": "User successfully deleted",
+    })
 }
 
 func PromoteUserToAdmin(c *fiber.Ctx) error {
-	var data struct {
-		IdUser uint `json:"id_user"`
-	}
+	db := c.Locals("db").(*gorm.DB)
+	idUser := c.Params("id_user")
 
-	if err := c.BodyParser(&data); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
+	id, err := strconv.Atoi(idUser)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
 		})
 	}
 
-	db := c.Locals("db").(*gorm.DB)
-	user, err := repository.GetUserById(db, data.IdUser)
+	user, err := repository.GetUserById(db, uint(id))
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
 			"error": "User not found",
 		})
 	}
 
 	if user.IdRole == 1 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"error": "User is already an admin",
 		})
 	}
 
-	if err := repository.PromoteUserToAdmin(db, data.IdUser); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	if err := repository.PromoteUserToAdmin(db, user.IdUser); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to promote user to admin",
 		})
 	}
 
-	return c.JSON(fiber.Map{
+	return c.Status(http.StatusOK).JSON(fiber.Map{
 		"message": "User promoted to admin successfully",
 	})
+}
+
+func GetUserById(c *fiber.Ctx) error {
+	db := c.Locals("db").(*gorm.DB)
+	idUser := c.Params("id_user")
+
+	id, err := strconv.Atoi(idUser)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid user ID",
+		})
+	}
+
+	user, err := repository.GetUserById(db, uint(id))
+	if err != nil {
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
+		})
+	}
+
+	return c.Status(http.StatusOK).JSON(user)
 }
