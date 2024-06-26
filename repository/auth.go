@@ -65,7 +65,7 @@ func GenerateToken(user *model.Users) (string, error) {
 		IdUser: user.IdUser,
 		IdRole: user.IdRole,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour).Unix(), // Token berlaku selama 1 jam
+			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(), // Token berlaku selama 1 jam
 		},
 	}
 

@@ -22,7 +22,7 @@ func GetAllUsers(c *fiber.Ctx) error {
 }
 
 func DeleteUserById(c *fiber.Ctx) error {
-    idParam := c.Params("id_user")
+    idParam := c.Query("id_user")
     idUser, err := strconv.ParseUint(idParam, 10, 64)
     if err != nil {
         return c.Status(http.StatusBadRequest).JSON(fiber.Map{
@@ -44,7 +44,7 @@ func DeleteUserById(c *fiber.Ctx) error {
 
 func PromoteUserToAdmin(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
-	idUser := c.Params("id_user")
+	idUser := c.Query("id_user")
 
 	id, err := strconv.Atoi(idUser)
 	if err != nil {
@@ -79,7 +79,7 @@ func PromoteUserToAdmin(c *fiber.Ctx) error {
 
 func GetUserById(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
-	idUser := c.Params("id_user")
+	idUser := c.Query("id_user")
 
 	id, err := strconv.Atoi(idUser)
 	if err != nil {

@@ -24,7 +24,7 @@ func GetAllRole(c *fiber.Ctx) error {
 
 // GetRoleById gets role by id_role
 func GetRoleById(c *fiber.Ctx) error {
-    idParam := c.Params("id_role")
+    idParam := c.Query("id_role")
 	idRole, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{

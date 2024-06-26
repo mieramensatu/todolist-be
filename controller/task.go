@@ -92,7 +92,7 @@ func InsertTask(c *fiber.Ctx) error {
 // UpdateTask updates task by id_task
 func UpdateTask(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
-	idTask := c.Params("id_task")
+	idTask := c.Query("id_task")
 
 	var updatedTask model.Task
 	if err := c.BodyParser(&updatedTask); err != nil {
@@ -121,7 +121,7 @@ func UpdateTask(c *fiber.Ctx) error {
 
 // DeleteTask deletes task by id_task
 func DeleteTask(c *fiber.Ctx) error {
-    idParam := c.Params("id_task")
+    idParam := c.Query("id_task")
     idTask, err := strconv.ParseUint(idParam, 10, 64)
     if err != nil {
         return c.Status(http.StatusBadRequest).JSON(fiber.Map{

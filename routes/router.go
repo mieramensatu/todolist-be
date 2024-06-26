@@ -25,15 +25,15 @@ func SetupTaskRoutes(app *fiber.App) {
 	admin.Get("/tasks", adminOnly, controller.GetAllTask)
 	admin.Get("/users", adminOnly, controller.GetAllUsers)
 	admin.Get("/roles", adminOnly, controller.GetAllRole)
-	admin.Get("/role/:id_role", adminOnly, controller.GetRoleById)
-	admin.Get("/iduser/:id_user", adminOnly, controller.GetUserById)
-	admin.Delete("/deluser/:id_user", adminOnly, controller.DeleteUserById)
-	admin.Post("/promoteuser/:id_user", adminOnly, controller.PromoteUserToAdmin) // Updated to use params
+	admin.Get("/role/get", adminOnly, controller.GetRoleById)
+	admin.Get("/users/get", adminOnly, controller.GetUserById)
+	admin.Delete("/users/delete", adminOnly, controller.DeleteUserById)
+	admin.Post("/promoteuser/update", adminOnly, controller.PromoteUserToAdmin) // Updated to use params
 
 	// Non-admin specific routes
 	app.Get("/task", middleware.Auth(), controller.GetUserTasks)
-	app.Get("/task/:id_task", middleware.Auth(), controller.GetTaskById)
+	app.Get("/task/get", middleware.Auth(), controller.GetTaskById)
 	app.Post("/posttask", middleware.Auth(), controller.InsertTask)
-	app.Put("/puttask/:id_task", middleware.Auth(), controller.UpdateTask)
-	app.Delete("/deltask/:id_task", middleware.Auth(), controller.DeleteTask)
+	app.Put("/task/update", middleware.Auth(), controller.UpdateTask)
+	app.Delete("/task/delete", middleware.Auth(), controller.DeleteTask)
 }
